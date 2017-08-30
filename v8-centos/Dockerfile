@@ -24,8 +24,10 @@ WORKDIR /tmp/v8
 # Generate config files
 RUN python tools/dev/v8gen.py x64.release
 
+RUN gn gen out.gn/x64.release --args='is_debug=false target_cpu="x64" is_component_build=true'
+
 # Build
-RUN ninja -C out.gn/x64.release
+RUN ninja -C out.gn/x64.release d8
 
 # Optional tests
 # RUN python tools/run-tests.py --gn
