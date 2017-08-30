@@ -1,6 +1,8 @@
 FROM centos:7
+LABEL maintainer="Eugene Cheltsov <chill.icp@gmail.com>"
 
 RUN yum update
+# because of lbzip2
 RUN yum install -y epel-release
 RUN yum install -y git python make gcc-multilib g++-multilib clang curl jq glib2-devel lbzip2
 
@@ -24,3 +26,6 @@ RUN python tools/dev/v8gen.py x64.release
 
 # Build
 RUN ninja -C out.gn/x64.release
+
+# Optional tests
+# RUN python tools/run-tests.py --gn
