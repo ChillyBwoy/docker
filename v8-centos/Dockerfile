@@ -15,7 +15,6 @@ ENV PATH="$PATH:/tmp/depot_tools"
 # to view commands use `fetch -n v8`
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git &&\
  fetch v8 &&\
- gclient sync &&\
  cd /tmp/v8 &&\
  python tools/dev/v8gen.py x64.release &&\
  ninja -C out.gn/x64.release d8 &&\
