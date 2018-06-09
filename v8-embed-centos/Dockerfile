@@ -2,8 +2,10 @@ FROM centos:7
 
 ARG V8_VERSION=HEAD
 ARG V8_OUT=/opt/v8-embed.x86_64
-ARG V8_INSTALL_PREFIX=/usr/local/v8
+ARG V8_INSTALL_PREFIX=/usr/local
 ARG GCC_VERSION=5.4.0
+
+ENV PATH="$PATH:/opt/depot_tools"
 
 RUN yum update -y &&\
   yum groupinstall -y "Development Tools" &&\
@@ -11,7 +13,7 @@ RUN yum update -y &&\
   yum install -y centos-release-scl-rh &&\
   yum install -y install devtoolset-7-gcc* &&\
   yum install -y https://centos7.iuscommunity.org/ius-release.rpm && \
-  yum install -y git bzip2 &&\
+  yum install -y git sudo bzip2 &&\
   yum install -y gmp-devel mpfr-devel libmpc-devel libatomic glib2 glib2-devel &&\
   yum install -y cmake3 &&\
   yum install -y python36u python36u-pip python36u-devel &&\
@@ -35,9 +37,8 @@ RUN mkdir /src &&\
   rm -rf /src/gcc-$GCC_VERSION &&\
   rm -rf /opt/gcc-$GCC_VERSION
 
-ENV LD_LIBRARY_PATH="/usr/local/lib64:$LD_LIBRARY_PATH"
-ENV LD_RUN_PATH="/usr/local/lib64:$LD_RUN_PATH"
-ENV PATH="$PATH:/opt/depot_tools"
+ENV LD_LIBRARY_PATH="/usr/local/lib64"
+ENV LD_RUN_PATH="/usr/local/lib64"
 
 # download build utils and V8 sources
 RUN echo -e "\n-*- V8 version: $V8_VERSION -*-\n" &&\
@@ -48,16 +49,21 @@ RUN echo -e "\n-*- V8 version: $V8_VERSION -*-\n" &&\
   cd /src/v8 &&\
   git checkout $V8_VERSION
 
+# # ОТ ЭТА ВОТ ЕБАЛА РАБОТАЕТ ЕБАНАРОТ
+# RUN cd /src/v8 && gn gen $V8_OUT --args='\
+# is_component_build=false \
+# use_custom_libcxx=false \
+# use_custom_libcxx_for_host=false \
+# v8_enable_i18n_support=false \
+# v8_static_library=true' && ninja -C $V8_OUT
+
 RUN cd /src/v8 && gn gen $V8_OUT --args='\
- is_component_build=false\
- is_debug=false\
- symbol_level=0\
- use_custom_libcxx=false\
- use_custom_libcxx_for_host=false\
- v8_enable_gdbjit=false\
- v8_enable_i18n_support=false\
- v8_static_library=true\
- v8_use_external_startup_data=false' && ninja -C $V8_OUT
+is_component_build=false \
+msan_track_origins=0 \
+use_custom_libcxx=false \
+use_custom_libcxx_for_host=false \
+v8_enable_i18n_support=false \
+v8_static_library=true' && ninja -C $V8_OUT
 
 # make install
 RUN mkdir -p $V8_INSTALL_PREFIX/{include/libplatform,lib64,src/inspector} &&\
@@ -65,6 +71,3 @@ RUN mkdir -p $V8_INSTALL_PREFIX/{include/libplatform,lib64,src/inspector} &&\
   install -p -m0644 $V8_OUT/obj/src/inspector/*.a $V8_INSTALL_PREFIX/src/inspector &&\
   install -p -m0644 /src/v8/include/*.h $V8_INSTALL_PREFIX/include &&\
   install -p -m0644 /src/v8/include/libplatform/* $V8_INSTALL_PREFIX/include/libplatform
-
-ENTRYPOINT ["scl", "enable", "devtoolset-7"]
-CMD ["bash"]
