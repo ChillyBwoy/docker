@@ -49,14 +49,6 @@ RUN echo -e "\n-*- V8 version: $V8_VERSION -*-\n" &&\
   cd /src/v8 &&\
   git checkout $V8_VERSION
 
-# # ОТ ЭТА ВОТ ЕБАЛА РАБОТАЕТ ЕБАНАРОТ
-# RUN cd /src/v8 && gn gen $V8_OUT --args='\
-# is_component_build=false \
-# use_custom_libcxx=false \
-# use_custom_libcxx_for_host=false \
-# v8_enable_i18n_support=false \
-# v8_static_library=true' && ninja -C $V8_OUT
-
 RUN cd /src/v8 && gn gen $V8_OUT --args='\
 is_component_build=false \
 msan_track_origins=0 \
